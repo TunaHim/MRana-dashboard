@@ -14,6 +14,7 @@
     .content { padding: 20px; }
     .nav a { display: block; padding: 10px 10px; margin: 6px 0; border-radius: 8px; text-decoration: none; color: #111; border: 1px solid #e6e6e6; background: #fff; }
     .nav a:hover { background: #f2f2f2; }
+    .nav a.subitem { margin-left: 14px; padding: 8px 10px; font-size: 13px; }
     .grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
     .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; background: #fff; }
     .tbl { border-collapse: collapse; width: 100%; font-size: 14px; }
@@ -31,21 +32,24 @@
       <div class='nav'>
         <a href='#perf'>Performance summary</a>
         <a href='#runtime'>Runtime per chunk</a>
-        <a href='#ts'>Global mean monthly t2m + trends</a>
-        <a href='#map'>Mean map comparison</a>
+        <a href='#t2m'>2m temperature</a>
+        <a class='subitem' href='#ts'>Global monthly mean</a>
+        <a class='subitem' href='#map'>Spatial mean</a>
+        <a href='#sic'>Sea ice concentration</a>
+        <a href='#pr'>Precipitation rate</a>
       </div>
     </div>
 
     <div class='content'>
       <h1>CLIMATE MODEL DASHBOARD</h1>
-      <div class='sub'>Variable: <b>t2m</b> — TCO319 vs TCO399 — mean map: 1995–2014</div>
+      <div class='sub'>TCO319 vs TCO399 — Simulation: 1990–2014</div>
 
       <div class='grid'>
         <div class='card' id='perf'>
           <h2>Performance summary</h2>
           <table class='tbl'>
 <thead><tr><th>Resolutions</th><th>tco319</th><th>tco399</th></tr></thead>
-<tbody><tr><td>chunks</td><td>74</td><td>75</td></tr><tr><td>avg_run_time_hhmm</td><td>01:58</td><td>02:19</td></tr><tr><td>median_run_time_hhmm</td><td>01:58</td><td>02:17</td></tr><tr><td>mean_sypd</td><td>4.067837837837837</td><td>3.4578666666666673</td></tr><tr><td>mean_asypd</td><td>3.9551351351351345</td><td>3.377333333333333</td></tr></tbody></table>
+<tbody><tr><td>Simulation (yrs)</td><td>25</td><td>25</td></tr><tr><td>avg run time</td><td>01:58</td><td>02:19</td></tr><tr><td>median run time</td><td>01:58</td><td>02:17</td></tr><tr><td>mean SYPD</td><td>4.1</td><td>3.5</td></tr><tr><td>mean ASYPD</td><td>4.0</td><td>3.4</td></tr><tr><td>No. of Grid pts.</td><td>654,400</td><td>421,120</td></tr><tr><td>Timestep</td><td>1200 s</td><td>900 s</td></tr></tbody></table>
         </div>
 
         <div class='card' id='runtime'>
@@ -54,16 +58,33 @@
           <img id='runtime_img' src='figures/t2m_perf_runtime_per_chunk.png' alt='Runtime per chunk'>
         </div>
 
+        <div class='card' id='t2m'>
+          <h2>2m temperature</h2>
+          <div style='color: #444; margin-top: -2px;'>Quick links: <a href='#ts'>Global monthly mean</a> · <a href='#map'>Spatial mean</a></div>
+        </div>
+
         <div class='card' id='ts'>
-          <h2>Global mean monthly t2m + trends</h2>
+          <h2>Global monthly mean</h2>
           <div id='ts_warn' class='warn'></div>
           <img id='ts_img' src='figures/t2m_global_mean_monthly_1990_2014.png' alt='Global mean monthly t2m'>
         </div>
 
         <div class='card' id='map'>
-          <h2>Mean map comparison</h2>
+          <h2>Spatial mean</h2>
           <div id='map_warn' class='warn'></div>
           <img id='map_img' src='figures/t2m_cmp_mean_1995_2014_robinson_0p5deg.png' alt='Mean comparison map'>
+        </div>
+
+        <div class='card' id='sic'>
+          <h2>Sea ice concentration</h2>
+          <div id='sic_warn' class='warn'></div>
+          <img id='sic_img' src='figures/sic_cmp_mean_1995_2014_robinson_0p5deg.png' alt='Sea ice concentration mean comparison map'>
+        </div>
+
+        <div class='card' id='pr'>
+          <h2>Precipitation rate</h2>
+          <div id='pr_warn' class='warn'></div>
+          <img id='pr_img' src='figures/pr_cmp_mean_1995_2014_robinson_0p5deg.png' alt='Precipitation mean comparison map'>
         </div>
       </div>
     </div>
@@ -71,6 +92,8 @@
 
 <script>
   const img = document.getElementById('map_img');
+  const sicImg = document.getElementById('sic_img');
+  const prImg = document.getElementById('pr_img');
 
   const setWarn = (id, msg) => {
     const el = document.getElementById(id);
@@ -79,6 +102,12 @@
 
   img.onerror = () => setWarn('map_warn', 'Mean map PNG not found in figures folder. Generate with: t2m_cmp.py --mean_year_start 1995 --mean_year_end 2014');
   img.onload = () => setWarn('map_warn', '');
+
+  sicImg.onerror = () => setWarn('sic_warn', 'Sea-ice mean map PNG not found in figures folder. Generate with: sic_cmp.py --mean_year_start 1995 --mean_year_end 2014');
+  sicImg.onload = () => setWarn('sic_warn', '');
+
+  prImg.onerror = () => setWarn('pr_warn', 'Precipitation mean map PNG not found in figures folder. Generate with: pr_cmp.py --mean_year_start 1995 --mean_year_end 2014');
+  prImg.onload = () => setWarn('pr_warn', '');
 
   // Static images warnings
   const runtimeImg = document.getElementById('runtime_img');
