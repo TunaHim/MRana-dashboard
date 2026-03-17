@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>Climate Model Dashboard — t2m</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 0; color: #111; }
+    h1 { margin: 0 0 8px 0; font-size: 28px; }
+    h2 { margin: 22px 0 10px 0; font-size: 20px; }
+    .sub { color: #444; margin-bottom: 16px; }
+    .layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+    .sidebar { padding: 18px 14px; border-right: 1px solid #e6e6e6; background: #fafafa; }
+    .content { padding: 20px; }
+    .nav a { display: block; padding: 10px 10px; margin: 6px 0; border-radius: 8px; text-decoration: none; color: #111; border: 1px solid #e6e6e6; background: #fff; }
+    .nav a:hover { background: #f2f2f2; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; background: #fff; }
+    .tbl { border-collapse: collapse; width: 100%; font-size: 14px; }
+    .tbl th, .tbl td { border: 1px solid #ddd; padding: 6px 8px; }
+    .tbl th { background: #f5f5f5; text-align: left; }
+    img { max-width: 100%; height: auto; border-radius: 8px; border: 1px solid #eee; }
+    select { font-size: 14px; padding: 6px 8px; }
+    .warn { color: #a00; }
+  </style>
+</head>
+<body>
+  <div class='layout'>
+    <div class='sidebar'>
+      <div style='font-weight: 700; margin-bottom: 10px;'>Navigation</div>
+      <div class='nav'>
+        <a href='#perf'>Performance summary</a>
+        <a href='#runtime'>Runtime per chunk</a>
+        <a href='#ts'>Global mean monthly t2m + trends</a>
+        <a href='#map'>Mean map comparison</a>
+      </div>
+    </div>
+
+    <div class='content'>
+      <h1>CLIMATE MODEL DASHBOARD</h1>
+      <div class='sub'>Variable: <b>t2m</b> — TCO319 vs TCO399 — mean map: 1995–2014</div>
+
+      <div class='grid'>
+        <div class='card' id='perf'>
+          <h2>Performance summary</h2>
+          <table class='tbl'>
+<thead><tr><th>Resolutions</th><th>tco319</th><th>tco399</th></tr></thead>
+<tbody><tr><td>chunks</td><td>74</td><td>75</td></tr><tr><td>avg_run_time_hhmm</td><td>01:58</td><td>02:19</td></tr><tr><td>median_run_time_hhmm</td><td>01:58</td><td>02:17</td></tr><tr><td>mean_sypd</td><td>4.067837837837837</td><td>3.4578666666666673</td></tr><tr><td>mean_asypd</td><td>3.9551351351351345</td><td>3.377333333333333</td></tr></tbody></table>
+        </div>
+
+        <div class='card' id='runtime'>
+          <h2>Runtime per chunk</h2>
+          <div id='runtime_warn' class='warn'></div>
+          <img id='runtime_img' src='figures/t2m_perf_runtime_per_chunk.png' alt='Runtime per chunk'>
+        </div>
+
+        <div class='card' id='ts'>
+          <h2>Global mean monthly t2m + trends</h2>
+          <div id='ts_warn' class='warn'></div>
+          <img id='ts_img' src='figures/t2m_global_mean_monthly_1990_2014.png' alt='Global mean monthly t2m'>
+        </div>
+
+        <div class='card' id='map'>
+          <h2>Mean map comparison</h2>
+          <div id='map_warn' class='warn'></div>
+          <img id='map_img' src='figures/t2m_cmp_mean_1995_2014_robinson_0p5deg.png' alt='Mean comparison map'>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const img = document.getElementById('map_img');
+
+  const setWarn = (id, msg) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = msg || '';
+  };
+
+  img.onerror = () => setWarn('map_warn', 'Mean map PNG not found in figures folder. Generate with: t2m_cmp.py --mean_year_start 1995 --mean_year_end 2014');
+  img.onload = () => setWarn('map_warn', '');
+
+  // Static images warnings
+  const runtimeImg = document.getElementById('runtime_img');
+  runtimeImg.onerror = () => setWarn('runtime_warn', 'Missing runtime plot. Run t2m_perf.py first.');
+  runtimeImg.onload = () => setWarn('runtime_warn', '');
+
+  const tsImg = document.getElementById('ts_img');
+  tsImg.onerror = () => setWarn('ts_warn', 'Missing time series plot. Run t2m_ts.py first.');
+  tsImg.onload = () => setWarn('ts_warn', '');
+</script>
+</body>
+</html>
