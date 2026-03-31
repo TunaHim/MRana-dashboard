@@ -30,6 +30,7 @@
     <div class='sidebar'>
       <div style='font-weight: 700; margin-bottom: 10px;'>Navigation</div>
       <div class='nav'>
+        <a href='t2m_dashboard_3exp_1990_1996.html'>3 experiments + ERA5 (1990–1996)</a>
         <a href='#perf'>Performance summary</a>
         <a href='#runtime'>Runtime per chunk</a>
         <a href='#t2m'>2m temperature</a>
@@ -49,7 +50,7 @@
           <h2>Performance summary</h2>
           <table class='tbl'>
 <thead><tr><th>Resolutions</th><th>tco319</th><th>tco399</th></tr></thead>
-<tbody><tr><td>Simulation (yrs)</td><td>25</td><td>25</td></tr><tr><td>avg run time</td><td>01:58</td><td>02:19</td></tr><tr><td>median run time</td><td>01:58</td><td>02:17</td></tr><tr><td>mean SYPD</td><td>4.1</td><td>3.5</td></tr><tr><td>mean ASYPD</td><td>4.0</td><td>3.4</td></tr><tr><td>No. of Grid pts.</td><td>654,400</td><td>421,120</td></tr><tr><td>Timestep</td><td>1200 s</td><td>900 s</td></tr></tbody></table>
+<tbody><tr><td>Simulation (yrs)</td><td>25</td><td>25</td></tr><tr><td>avg run time</td><td>01:58</td><td>02:19</td></tr><tr><td>median run time</td><td>01:58</td><td>02:17</td></tr><tr><td>mean SYPD</td><td>4.1</td><td>3.5</td></tr><tr><td>mean ASYPD</td><td>4.0</td><td>3.4</td></tr><tr><td>No. of Grid pts.</td><td>421,120</td><td>654,400</td></tr><tr><td>Timestep</td><td>1200 s</td><td>900 s</td></tr></tbody></table>
         </div>
 
         <div class='card' id='runtime'>
@@ -60,7 +61,7 @@
 
         <div class='card' id='t2m'>
           <h2>2m temperature</h2>
-          <div style='color: #444; margin-top: -2px;'>Quick links: <a href='#ts'>Global monthly mean</a> · <a href='#map'>Spatial mean</a></div>
+          <div style='color: #444; margin-top: -2px;'>Quick links: <a href='#ts'>Global monthly mean</a> · <a href='#map'>Spatial mean</a> · <a href='#obs'>ERA5 comparison</a></div>
         </div>
 
         <div class='card' id='ts'>
@@ -73,6 +74,15 @@
           <h2>Spatial mean</h2>
           <div id='map_warn' class='warn'></div>
           <img id='map_img' src='figures/t2m_cmp_mean_1995_2014_robinson_0p5deg.png' alt='Mean comparison map'>
+        </div>
+
+        <div class='card' id='obs'>
+          <h2>ERA5 comparison</h2>
+          <div id='era5_319_warn' class='warn'></div>
+          <img id='era5_319_img' src='figures/t2m_obs_cmp_era5_tco319_1990_2014_robinson_0p5deg.png' alt='TCO319 vs ERA5 mean and bias'>
+          <div style='height: 10px;'></div>
+          <div id='era5_399_warn' class='warn'></div>
+          <img id='era5_399_img' src='figures/t2m_obs_cmp_era5_tco399_1990_2014_robinson_0p5deg.png' alt='TCO399 vs ERA5 mean and bias'>
         </div>
 
         <div class='card' id='sic'>
@@ -94,6 +104,8 @@
   const img = document.getElementById('map_img');
   const sicImg = document.getElementById('sic_img');
   const prImg = document.getElementById('pr_img');
+  const era5_319 = document.getElementById('era5_319_img');
+  const era5_399 = document.getElementById('era5_399_img');
 
   const setWarn = (id, msg) => {
     const el = document.getElementById(id);
@@ -109,7 +121,12 @@
   prImg.onerror = () => setWarn('pr_warn', 'Precipitation mean map PNG not found in figures folder. Generate with: pr_cmp.py --mean_year_start 1995 --mean_year_end 2014');
   prImg.onload = () => setWarn('pr_warn', '');
 
-  // Static images warnings
+  era5_319.onerror = () => setWarn('era5_319_warn', 'ERA5 comparison PNG not found in figures folder. Generate with: era5_t2m_cmp.py --start_year 1990 --end_year 2014');
+  era5_319.onload = () => setWarn('era5_319_warn', '');
+
+  era5_399.onerror = () => setWarn('era5_399_warn', 'ERA5 comparison PNG not found in figures folder. Generate with: era5_t2m_cmp.py --start_year 1990 --end_year 2014');
+  era5_399.onload = () => setWarn('era5_399_warn', '');
+
   const runtimeImg = document.getElementById('runtime_img');
   runtimeImg.onerror = () => setWarn('runtime_warn', 'Missing runtime plot. Run t2m_perf.py first.');
   runtimeImg.onload = () => setWarn('runtime_warn', '');
