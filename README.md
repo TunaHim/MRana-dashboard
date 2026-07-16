@@ -4,6 +4,8 @@ An interactive dashboard for exploring and comparing high-resolution climate mod
 
 The dashboard demonstrates workflows developed for climate model evaluation using Python and HPC environments.
 
+![Dashboard overview](figures/t2m_dashboard_preview.png)
+
 ## Live Dashboard
 
 https://tunahim.github.io/MRana-dashboard/
@@ -28,6 +30,7 @@ https://tunahim.github.io/MRana-dashboard/
 - Matplotlib
 - Climate model evaluation
 - HPC workflows
+- Windsurf AI
 
 ## Repository contents
 
@@ -35,3 +38,9 @@ https://tunahim.github.io/MRana-dashboard/
 - Python analysis scripts
 - Jupyter notebooks
 - Example figures
+
+## Notes
+
+- The original simulation data are not included because they are hosted on HPC systems and are not publicly distributable.
+- The dashboard is intended as a demonstration of climate model evaluation workflows, visualisation, and software engineering practices.
+- The analysis was developed and tested in HPC environments using Python, xarray, Dask, and related scientific libraries.
