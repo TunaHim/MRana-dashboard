@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it is built · Climate Model Evaluation Dashboard</title>
+<style>
+:root{--bg:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;--line:#e1e0d9;--axis:#c3c2b7;
+--blue:#2a78d6;--blue-soft:#cde2fb;--orange:#eb6834;--orange-soft:#fbe0d4;--aqua:#1baf7a;--aqua-soft:#d3f1e5;--yellow:#eda100;--yellow-soft:#fcefc9;--violet:#4a3aa7;--violet-soft:#e2def7;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink2:#c3c2b7;--muted:#898781;--line:#2c2c2a;--axis:#383835;
+--blue:#3987e5;--blue-soft:#17324f;--orange:#d95926;--orange-soft:#3d2216;--aqua:#199e70;--aqua-soft:#12342a;--yellow:#c98500;--yellow-soft:#3a2d0c;--violet:#9085e9;--violet-soft:#2a2550;}}
+:root[data-theme="dark"]{--bg:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink2:#c3c2b7;--muted:#898781;--line:#2c2c2a;--axis:#383835;
+--blue:#3987e5;--blue-soft:#17324f;--orange:#d95926;--orange-soft:#3d2216;--aqua:#199e70;--aqua-soft:#12342a;--yellow:#c98500;--yellow-soft:#3a2d0c;--violet:#9085e9;--violet-soft:#2a2550;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1060px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:26px;margin:0 0 4px}
+h2{font-size:19px;margin:40px 0 8px}
+p.lead{color:var(--ink2);margin:0 0 20px;max-width:760px}
+p{max-width:780px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.grid .card{margin:0}
+.card h3{font-size:15px;margin:0 0 6px}
+.card p{margin:0;color:var(--ink2);font-size:14px}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:10px;margin-bottom:6px}
+.tag.blue{background:var(--blue-soft);color:var(--blue)} .tag.orange{background:var(--orange-soft);color:var(--orange)}
+.tag.aqua{background:var(--aqua-soft);color:var(--aqua)} .tag.violet{background:var(--violet-soft);color:var(--violet)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-size:24px;font-weight:600}
+.stat span{color:var(--ink2);font-size:13px}
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--surface)}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{color:var(--ink2);font-weight:600}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.wrap{overflow-x:auto}
+svg text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.svgbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;overflow-x:auto}
+.note{color:var(--muted);font-size:13px}
+</style>
+<meta name="description" content="Data and software design of the DestinE IFS-FESOM evaluation dashboard.">
+<meta name="author" content="Himansu Kesari Pradhan">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M5 20c4-8 8-8 11 0s7 8 11 0' stroke='white' stroke-width='3' fill='none'/%3E%3C/svg%3E">
+<style>
+.sitenav{position:sticky;top:0;z-index:10;background:var(--surface,#fcfcfb);border-bottom:1px solid var(--line,#e1e0d9)}
+.sitenav div{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;font:14px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.sitenav b{margin-right:8px;color:var(--ink,#0b0b0b)}
+.sitenav a{color:var(--ink2,#52514e);text-decoration:none}
+.sitenav a:hover,.sitenav a.here{color:var(--blue,#2a78d6)}
+.sitefoot{border-top:1px solid var(--line,#e1e0d9);margin-top:32px;background:var(--surface,#fcfcfb);color:var(--ink2,#52514e)}
+.sitefoot div.in{max-width:1100px;margin:0 auto;padding:18px 16px 26px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px 28px;font:13px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.sitefoot b{display:block;color:var(--ink,#0b0b0b);margin-bottom:3px}
+.sitefoot a{color:var(--blue,#2a78d6)}
+.sitefoot p{margin:0}
+</style>
+</head>
+<body>
+<!-- site:nav --><nav class="sitenav"><div><b>Climate Model Evaluation Dashboard</b><a href="index.html">Dashboard</a><a href="t2m_dashboard_3exp_1990_1996.html">3 experiments + ERA5</a><a href="engineering_overview.html" class="here">How it is built</a><a href="https://github.com/TunaHim/MRana-dashboard">Code on GitHub</a></div></nav><!-- /site:nav -->
+<main>
+<h1>How the dashboard is built</h1>
+<p class="lead">This page covers the data and software side of the Climate Model Evaluation Dashboard. It shows how output from
+three Destination Earth IFS-FESOM experiments on HEALPix grids, an ERA5 reference in a cloud Zarr store and the workflow's own
+job reports are reduced on the HPC system into small tables and figures. A generator script then turns those into a static
+website, which is why the live dashboard runs without any access to the raw model data.</p>
+<div class="stats">
+  <div class="stat"><b>3 experiments</b><span>IFS-FESOM: TCO319 (~35 km) ×2 and TCO399 (~28 km)</span></div>
+  <div class="stat"><b>170 chunks</b><span>of job reports parsed: 74 + 21 + 75</span></div>
+  <div class="stat"><b>3.5–4.1 SYPD</b><span>mean simulated years per day per experiment</span></div>
+  <div class="stat"><b>8 CSV tables</b><span>654 lines of derived data drive the site</span></div>
+  <div class="stat"><b>0.5° grid</b><span>HEALPix regridded for Robinson-projection maps</span></div>
+  <div class="stat"><b>2,365 lines</b><span>of Python in 7 scripts and the dashboard package</span></div>
+</div>
+<h2>1. The pipeline at a glance</h2>
+<p>Data flows from left to right. Each box is one stage, and the blue text names the code that does it. Steps 1–3 run on the HPC system; steps 4–5 need only the small files they leave behind.</p>
+<div class="svgbox">
+<svg viewBox="0 0 1000 300" width="100%" role="img" aria-label="Pipeline">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+<text x="10" y="22" font-size="13" font-weight="600" fill="var(--ink2)">1 · SOURCES</text>
+<rect x="10" y="34" width="178" height="256" rx="8" fill="var(--blue-soft)" stroke="var(--blue)"/>
+<text x="22" y="56" font-size="13" font-weight="600" fill="var(--ink)">Three inputs</text>
+<text x="22" y="78" font-size="12" fill="var(--ink2)">IFS-FESOM monthly</text>
+<text x="22" y="94" font-size="12" fill="var(--ink2)">GRIB on HEALPix</text>
+<text x="22" y="110" font-size="12" fill="var(--ink2)">(DKRZ HPC)</text>
+<text x="22" y="134" font-size="12" fill="var(--ink2)">ERA5 monthly Zarr</text>
+<text x="22" y="150" font-size="12" fill="var(--ink2)">on DKRZ Swift</text>
+<text x="22" y="174" font-size="12" fill="var(--ink2)">Autosubmit job</text>
+<text x="22" y="190" font-size="12" fill="var(--ink2)">report TSVs</text>
+<text x="22" y="262" font-size="11" fill="var(--blue)">cfgrib · xr.open_zarr</text>
+<text x="22" y="276" font-size="11" fill="var(--blue)">csv.DictReader</text>
+<line x1="188" y1="150" x2="208" y2="150" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="210" y="22" font-size="13" font-weight="600" fill="var(--ink2)">2 · REDUCE</text>
+<rect x="210" y="34" width="178" height="256" rx="8" fill="var(--surface)" stroke="var(--axis)"/>
+<text x="222" y="56" font-size="13" font-weight="600" fill="var(--ink)">Stream, don&#x27;t load</text>
+<text x="222" y="78" font-size="12" fill="var(--ink2)">one month at a time:</text>
+<text x="222" y="94" font-size="12" fill="var(--ink2)">read, mask missing,</text>
+<text x="222" y="110" font-size="12" fill="var(--ink2)">add to running sum</text>
+<text x="222" y="134" font-size="12" fill="var(--ink2)">period means</text>
+<text x="222" y="150" font-size="12" fill="var(--ink2)">global means over</text>
+<text x="222" y="166" font-size="12" fill="var(--ink2)">equal-area pixels</text>
+<text x="222" y="262" font-size="11" fill="var(--blue)">_mean_over_period()</text>
+<text x="222" y="276" font-size="11" fill="var(--blue)">_read_month_global_mean</text>
+<line x1="389" y1="150" x2="409" y2="150" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="411" y="22" font-size="13" font-weight="600" fill="var(--ink2)">3 · ALIGN</text>
+<rect x="411" y="34" width="178" height="256" rx="8" fill="var(--aqua-soft)" stroke="var(--aqua)"/>
+<text x="423" y="56" font-size="13" font-weight="600" fill="var(--ink)">Common grid</text>
+<text x="423" y="78" font-size="12" fill="var(--ink2)">HEALPix → 0.5° lat-lon</text>
+<text x="423" y="94" font-size="12" fill="var(--ink2)">NSIDE from pixel count</text>
+<text x="423" y="110" font-size="12" fill="var(--ink2)">nested or ring order</text>
+<text x="423" y="134" font-size="12" fill="var(--ink2)">ERA5 to the same grid</text>
+<text x="423" y="150" font-size="12" fill="var(--ink2)">K → °C, units to mm/day</text>
+<text x="423" y="262" font-size="11" fill="var(--blue)">hp.get_interp_val</text>
+<text x="423" y="276" font-size="11" fill="var(--blue)">_infer_nside()</text>
+<line x1="589" y1="150" x2="609" y2="150" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="611" y="22" font-size="13" font-weight="600" fill="var(--ink2)">4 · DERIVE</text>
+<rect x="611" y="34" width="178" height="256" rx="8" fill="var(--surface)" stroke="var(--axis)"/>
+<text x="623" y="56" font-size="13" font-weight="600" fill="var(--ink)">Small outputs</text>
+<text x="623" y="78" font-size="12" fill="var(--ink2)">8 CSV tables</text>
+<text x="623" y="94" font-size="12" fill="var(--ink2)">(series, performance)</text>
+<text x="623" y="118" font-size="12" fill="var(--ink2)">PNG maps: means,</text>
+<text x="623" y="134" font-size="12" fill="var(--ink2)">biases, differences</text>
+<text x="623" y="150" font-size="12" fill="var(--ink2)">runtime per chunk</text>
+<text x="623" y="276" font-size="11" fill="var(--blue)">csv/ · figures/</text>
+<line x1="790" y1="150" x2="810" y2="150" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="812" y="22" font-size="13" font-weight="600" fill="var(--ink2)">5 · PUBLISH</text>
+<rect x="812" y="34" width="178" height="256" rx="8" fill="var(--violet-soft)" stroke="var(--violet)"/>
+<text x="824" y="56" font-size="13" font-weight="600" fill="var(--ink)">Static website</text>
+<text x="824" y="78" font-size="12" fill="var(--ink2)">HTML generated from</text>
+<text x="824" y="94" font-size="12" fill="var(--ink2)">a template + CSVs</text>
+<text x="824" y="118" font-size="12" fill="var(--ink2)">GitHub Pages</text>
+<text x="824" y="134" font-size="12" fill="var(--ink2)">no server, no data</text>
+<text x="824" y="150" font-size="12" fill="var(--ink2)">access needed</text>
+<text x="824" y="262" font-size="11" fill="var(--blue)">dashboard/</text>
+<text x="824" y="276" font-size="11" fill="var(--blue)">t2m_dashboard.py</text>
+</svg>
+</div>
+<h2>2. The scripts</h2>
+<div class="wrap">
+<table>
+<thead><tr><th>Script</th><th>Does</th><th>Output</th></tr></thead>
+<tbody>
+<tr><td><code>t2m_perf.py</code></td><td>Parses Autosubmit job-report TSVs, checks the required columns (Chunk, Job Name, Queue, Run, CHSY, SYPD, ASYPD), summarises run time and throughput</td><td>performance CSVs, runtime-per-chunk plots</td></tr>
+<tr><td><code>t2m_ts.py</code></td><td>Global monthly mean 2 m temperature from HEALPix GRIB, NaN-aware mean over equal-area pixels</td><td>time-series CSV and plot</td></tr>
+<tr><td><code>t2m_cmp.py</code>, <code>t2m_maps.py</code></td><td>Period-mean and monthly maps, HEALPix to 0.5° lat-lon</td><td>Robinson maps</td></tr>
+<tr><td><code>era5_t2m_cmp.py</code></td><td>Model vs ERA5 2 m temperature, ERA5 read lazily from a Zarr store over HTTPS</td><td>three-panel mean and bias maps</td></tr>
+<tr><td><code>sic_cmp.py</code>, <code>pr_cmp.py</code></td><td>Sea-ice concentration and precipitation, 1995–2014 means</td><td>comparison maps</td></tr>
+<tr><td><code>dashboard/t2m_dashboard.py</code></td><td>Fills an HTML template with the tables and figures</td><td><code>index.html</code> and the 3-experiment page</td></tr>
+<tr><td><code>dashboard/streamlit_app.py</code></td><td>Interactive version of the same views for local use</td><td>Streamlit app</td></tr>
+</tbody>
+</table>
+</div>
+<h2>3. Problems the pipeline had to solve</h2>
+<div class="grid">
+  <div class="card"><span class="tag orange">data volume</span><h3>Never hold 25 years at once</h3>
+  <p>Period means are built as a running sum: one monthly GRIB file is read, added and dropped. Memory stays at one field, however long the period.</p></div>
+  <div class="card"><span class="tag orange">gaps</span><h3>Missing months are counted</h3>
+  <p>Months without a file are skipped and counted, a warning reports how many, and the mean is divided by the months actually used. GRIB fill values are turned into NaN first.</p></div>
+  <div class="card"><span class="tag orange">grids</span><h3>HEALPix to maps</h3>
+  <p>NSIDE is worked out from the number of pixels, and nested or ring order is a command-line switch. Values are then interpolated to a 0.5° grid with <code>healpy</code> for plotting.</p></div>
+  <div class="card"><span class="tag blue">reference data</span><h3>ERA5 without a download</h3>
+  <p>ERA5 is opened lazily as Zarr from the DKRZ Swift object store with 12-month chunks. Only the selected period is averaged, and both lat-lon and HEALPix layouts are handled.</p></div>
+  <div class="card"><span class="tag blue">robust parsing</span><h3>Fail early on bad reports</h3>
+  <p>The job-report reader checks that every required column is present and stops with a clear message listing what is missing and what was found.</p></div>
+  <div class="card"><span class="tag blue">deployment</span><h3>A site that needs no data</h3>
+  <p>The website is plain HTML built from CSVs and PNGs, so it can be served from GitHub Pages and stays fast. Every script takes its paths and limits as command-line arguments.</p></div>
+</div>
+<h2>4. Performance monitoring in numbers</h2>
+<div class="wrap">
+<table>
+<thead><tr><th>Experiment</th><th>Resolution · setting</th><th>Chunks</th><th>Mean SYPD</th><th>Mean ASYPD</th></tr></thead>
+<tbody>
+<tr><td>a3be</td><td>TCO319 (~35 km), 1200 s</td><td>74</td><td>4.1</td><td>4.0</td></tr>
+<tr><td>a3df</td><td>TCO319 (~35 km), 900 s</td><td>21</td><td>3.5</td><td>3.5</td></tr>
+<tr><td>a3bo</td><td>TCO399 (~28 km), 900 s</td><td>75</td><td>3.5</td><td>3.4</td></tr>
+</tbody>
+</table>
+</div>
+<p>SYPD is simulated years per day of run time; ASYPD also counts queueing and post-processing. Values come from <code>csv/t2m_perf_summary_3exp_table.csv</code>.</p>
+<h2>5. What could come next</h2>
+<div class="wrap">
+<table>
+<thead><tr><th>Idea</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Shared module</td><td>Reading GRIB, NSIDE inference and HEALPix regridding are repeated in several scripts. One package would remove the copies.</td></tr>
+<tr><td>Tests and CI</td><td>There are no automated tests yet. The job-report parser and the period-mean code are easy to test with small files.</td></tr>
+<tr><td>Automatic rebuild</td><td>A GitHub Action could regenerate the HTML from the CSVs on every push, so the site and the data never drift apart.</td></tr>
+<tr><td>More variables</td><td>The same pattern (stream, regrid, tabulate, publish) can add ocean and cloud diagnostics with little new code.</td></tr>
+</tbody>
+</table>
+</div>
+<h2>6. In one sentence</h2>
+<div class="card"><p style="color:var(--ink);font-size:15px">Monthly HEALPix GRIB output from three IFS-FESOM experiments, ERA5 from a cloud Zarr store and Autosubmit job reports are streamed and reduced on the HPC system into eight small tables and a set of maps, and a generator script publishes them as a static dashboard that needs no access to the raw data.</p></div>
+</main>
+<!-- site:foot --><footer class="sitefoot"><div class="in">
+<div><b>Climate Model Evaluation Dashboard</b><p>By Himansu Kesari Pradhan, 2026. Code under the
+<a href="https://github.com/TunaHim/MRana-dashboard/blob/main/LICENSE">MIT licence</a>; source on
+<a href="https://github.com/TunaHim/MRana-dashboard">GitHub</a>. Page built 6 November 2026.</p></div>
+<div><b>Data credits</b><p>IFS-FESOM experiments: Destination Earth Climate DT (ECMWF, ESA, EUMETSAT) and the Alfred Wegener Institute. ERA5: Copernicus Climate Change Service, copy hosted by DKRZ.</p></div>
+<div><b>More</b><p><a href="index.html">Dashboard</a> · <a href="https://github.com/TunaHim/MRana-dashboard#readme">README</a> · <a href="https://github.com/TunaHim/MRana-dashboard/issues">Questions and comments</a></p></div>
+</div></footer><!-- /site:foot -->
+</body>
+</html>
