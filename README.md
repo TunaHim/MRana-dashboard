@@ -10,6 +10,8 @@ The dashboard demonstrates workflows developed for climate model evaluation usin
 
 https://tunahim.github.io/MRana-dashboard/
 
+How the data pipeline and the static site are built: [How it is built](https://tunahim.github.io/MRana-dashboard/engineering_overview.html).
+
 ## Features
 
 - Interactive climate dashboard

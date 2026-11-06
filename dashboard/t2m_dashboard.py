@@ -238,6 +238,7 @@ def main() -> None:
     <div class='sidebar'>
       <div style='font-weight: 700; margin-bottom: 10px;'>Navigation</div>
       <div class='nav'>
+        <a href='engineering_overview.html'>How it is built</a>
         <a href='{link_to_3exp}'>3 experiments + ERA5 (1990–1996)</a>
         <a href='#perf'>Performance summary</a>
         <a href='#runtime'>Runtime per chunk</a>
@@ -425,6 +426,7 @@ def main() -> None:
     <div class='sidebar'>
       <div style='font-weight: 700; margin-bottom: 10px;'>Navigation</div>
       <div class='nav'>
+        <a href='engineering_overview.html'>How it is built</a>
         <a href='{link_to_main}'>TCO319 vs TCO399 (1990–2014)</a>
         <a href='#perf'>Performance summary</a>
         <a href='#runtime'>Runtime per chunk</a>
